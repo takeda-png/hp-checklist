@@ -77,6 +77,14 @@ function App() {
         { name: 'プライバシーポリシー', ok: /privacy|プライバシー|個人情報/.test(htmlContent), itemIds: ['8-1'] },
         { name: 'コピーライト表記', ok: /&copy;|©|copyright|2024|2025|20\d{2}/.test(htmlContent), itemIds: ['8-3'] },
         { name: 'お問い合わせフォーム', ok: /<form[^>]*>|contact|inquiry|お問い合わせ/i.test(htmlContent), itemIds: ['8-5'] },
+
+        // キーワード・SEO分析
+        { name: 'Google Search Console', ok: /google-site-verification|google[a-z0-9]*\.html|search-console/i.test(htmlContent), itemIds: ['9-1'] },
+
+        // 追加の解析ツール（チェックリスト対応なし・参考情報）
+        { name: 'Microsoft Clarity', ok: /clarity\.ms|clr\.js|clarity script/i.test(htmlContent), itemIds: [] },
+        { name: 'Hotjar（ヒートマップ）', ok: /hotjar|hj\.clearbit\.com|hjid|hjsv/i.test(htmlContent), itemIds: [] },
+        { name: 'Segment', ok: /segment\.com|segment analytics/i.test(htmlContent), itemIds: [] },
       ]
 
       const results = {
