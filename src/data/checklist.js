@@ -19,6 +19,11 @@ export const checklistData = [
         title: "OGPタグ（og:title / og:description / og:image）が設定されているか",
         priority: "中",
       },
+      {
+        id: "1-4",
+        title: "<meta description>が120～160文字か",
+        priority: "中",
+      },
     ],
   },
   {
@@ -154,6 +159,11 @@ export const checklistData = [
         title: "ファビコン（タブのアイコン）が設定されているか",
         priority: "低",
       },
+      {
+        id: "6-6",
+        title: "viewportメタタグが設定されているか（レスポンシブ対応）",
+        priority: "高",
+      },
     ],
   },
   {
@@ -191,6 +201,16 @@ export const checklistData = [
         title: "Google Analyticsなどの解析タグが正しく入っているか",
         priority: "高",
       },
+      {
+        id: "7-7",
+        title: "Google Tag Manager（タグマネ）が導入されているか",
+        priority: "中",
+      },
+      {
+        id: "7-8",
+        title: "charsetメタタグが正しく設定されているか（UTF-8など）",
+        priority: "中",
+      },
     ],
   },
   {
@@ -216,6 +236,11 @@ export const checklistData = [
       {
         id: "8-4",
         title: "特定商取引法に基づく表記が必要な場合は設置されているか（ECサイト等）",
+        priority: "高",
+      },
+      {
+        id: "8-5",
+        title: "お問い合わせフォームがあるか（contactフォーム等）",
         priority: "高",
       },
     ],
