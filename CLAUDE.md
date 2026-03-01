@@ -9,12 +9,11 @@
 ## 🎯 機能要件
 - チェックリスト項目の表示とチェック管理
 - チェック状態をlocalStorageに保存（キー: `hp-checklist-state`）
-- メモ欄をlocalStorageに保存（キー: `hp-checklist-memos`）
-- 完了数 / 全体数のカウント表示
+- 完了数 / 全体数のカウント表示とプログレスバー
 - 優先度（高・中・低）でフィルタリング
 - カテゴリごとにアコーディオン折りたたみ可能
 - 「リセット」ボタンで全チェックを外す機能
-- メモ欄に自由にテキスト入力可能
+- チェック済み項目はグレーアウト表示
 
 ## 🔍 URLチェック機能
 - URLを入力するフォーム
@@ -62,33 +61,30 @@
 
 ## 🔧 技術要件
 - **フレームワーク**: React + Vite
-- **スタイリング**: TailwindCSS
+- **スタイリング**: TailwindCSS (CDN版)
 - **データ管理**: src/data/checklist.js
 - **localStorage キー**:
-  - `hp-checklist-state` （チェック状態）
-  - `hp-checklist-memos` （メモ内容）
-- **コンポーネント分割**: 適切に分割
+  - `hp-checklist-state` （チェック状態: {itemId: boolean}形式）
+- **外部API**: AllOrigins（CORS対応のスクレイピング）
+- **デプロイ**: GitHub Pages + GitHub Actions自動デプロイ
 
 ## 📁 ファイル構成
 ```
 hp-checklist/
 ├── src/
 │   ├── data/
-│   │   └── checklist.js        # チェックリストデータ
-│   ├── components/
-│   │   ├── ChecklistItem.jsx   # チェック項目
-│   │   ├── CategorySection.jsx  # カテゴリセクション
-│   │   ├── FilterBar.jsx       # フィルタバー
-│   │   └── StatsBar.jsx        # 完了数表示
-│   ├── App.jsx
-│   ├── App.css
-│   ├── index.css               # Tailwind設定
-│   └── main.jsx
-├── index.html
-├── vite.config.js
-├── postcss.config.js
-├── tailwind.config.js
+│   │   └── checklist.js        # 45項目のチェックリストデータ
+│   ├── App.jsx                 # メインコンポーネント（チェックリスト＋URLチェッカー）
+│   ├── main.jsx                # エントリーポイント
+├── public/
+│   └── vite.svg
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # GitHub Pages自動デプロイ
+├── index.html                  # HTMLテンプレート（TailwindCSS CDN対応）
+├── vite.config.js              # Vite設定（/api/fetchプロキシ含む）
 ├── package.json
+├── .gitignore
 └── CLAUDE.md
 ```
 
@@ -101,36 +97,66 @@ hp-checklist/
 ```json
 {
   "hp-checklist-state": {
-    "item_id_1": true,
-    "item_id_2": false,
-    ...
-  },
-  "hp-checklist-memos": {
-    "category_1": "メモテキスト...",
+    "title_1": true,
+    "title_2": false,
+    "title_3": true,
     ...
   }
 }
 ```
 
+## 🌐 URLチェッカーの実装
+- **機能**: HPのURLを入力してSEO要素を自動チェック
+- **チェック項目**:
+  1. `<title>タグ` - ページタイトルの有無
+  2. `<meta description>` - ディスクリプション設定確認
+  3. `OGPタグ` - SNS共有時のOG情報
+  4. `<h1>タグ` - H1見出しの有無
+  5. `HTTPS` - セキュアプロトコル対応確認
+  6. `ファビコン` - ブランドアイコン設定確認
+- **技術**: AllOrigins API + 正規表現マッチング
+- **UI**: トグルボタンでチェックリストとURLチェッカーを切り替え
+
 ## ✅ 完成条件
 - [x] すべての45項目がチェックリストに表示される
 - [x] チェック状態がlocalStorageで保存・復元される
-- [x] 優先度フィルタリング機能が動作する
+- [x] 優先度フィルタリング機能が動作する（高・中・低）
 - [x] カテゴリ別アコーディオンが動作する
-- [x] メモ欄が動作し、localStorageに保存される
 - [x] リセットボタンで全チェックが外れる
-- [x] 完了数が正確に表示される
-- [x] TailwindCSSでビジネスライクなデザインが実装される
+- [x] 完了数／全体数とプログレスバーが正確に表示される
+- [x] チェック済み項目はグレーアウト表示
+- [x] インラインスタイルでビジネスライクなデザイン実装
 - [x] スマホでレスポンシブに表示される
-- [x] URLチェッカーコンポーネント実装
+- [x] URLチェッカー機能実装（メインチェックリストに統合）
+- [x] URLチェッカーのトグルボタンで切り替え可能
+- [x] 6項目のSEOチェック機能（title, meta, OGP, h1, HTTPS, favicon）
 - [x] GitHub Pages で公開
-- [x] Git リポジトリ作成
+- [x] GitHub Actions自動デプロイ設定
+- [x] Git リポジトリ作成・運用
 
 ## 🌐 公開URL
 - **GitHub Pages:** https://takeda-png.github.io/hp-checklist/
 - **GitHub リポジトリ:** https://github.com/takeda-png/hp-checklist
 
 ## 📝 最終更新（2026-03-01）
-- URLチェッカー機能追加（簡易的な自動チェック）
-- GitHub Pages デプロイ設定完了
-- GitHub Actions CI/CD パイプライン構築
+- ✅ URLチェッカー機能をメインアプリケーションに完全統合
+- ✅ トグルボタンで「チェックリスト」⇄「URLをチェック」切り替え機能
+- ✅ AllOrigins API経由でCORS対応スクレイピング実装
+- ✅ 6項目のSEOチェック機能（正規表現マッチング）
+- ✅ GitHub Pages デプロイ確認完了
+- ✅ GitHub Actions自動ビルド・デプロイ設定
+- ✅ TailwindCSS CDN対応により安定した動作確認
+
+## 🔧 開発環境起動
+```bash
+npm install          # 初回のみ
+npm run dev          # 開発サーバー起動 (http://localhost:5173)
+npm run build        # 本番ビルド
+npm run preview      # ビルド結果プレビュー
+```
+
+## 📌 主要な実装ファイル
+- **App.jsx**: メインコンポーネント（全機能を含むシングルコンポーネント）
+  - State: checkedItems, filterPriority, expandedCategory, showURLChecker, urlInput, urlLoading, urlResults
+  - 機能: チェックリスト管理、URL検証、localStorage同期
+  - UI: インラインスタイル（Tailwindクラス非使用）

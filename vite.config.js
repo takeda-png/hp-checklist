@@ -5,4 +5,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: '/hp-checklist/',
   plugins: [react()],
+  server: {
+    proxy: {
+      '/api/fetch': {
+        target: 'https://api.allorigins.win',
+        changeOrigin: true,
+        rewrite: (path) => '/get?url=' + path.replace('/api/fetch/', '')
+      }
+    }
+  }
 })
