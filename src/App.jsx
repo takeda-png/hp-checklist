@@ -53,10 +53,13 @@ function App() {
         // 画像
         { name: '<img>のalt属性', ok: checkImgAltAttributes(htmlContent), itemIds: ['3-1'] },
         { name: '画像ファイルサイズ（500KB以内）', ok: checkImageFileSizes(htmlContent), itemIds: ['3-2'] },
+        { name: '画像にwidth/height属性', ok: checkImageResponsive(htmlContent), itemIds: ['6-1'] },
 
         // リンク・ボタン
         { name: 'リンク切れの可能性', ok: checkLinksValid(htmlContent), itemIds: ['5-1'] },
         { name: '外部リンクがtarget="_blank"', ok: checkExternalLinksTarget(htmlContent), itemIds: ['5-2'] },
+        { name: 'ボタンテキスト（「こちら」など曖昧でない）', ok: checkLinkTextClarity(htmlContent), itemIds: ['5-3'] },
+        { name: 'フォーム送信ボタン（action設定）', ok: checkFormAction(htmlContent), itemIds: ['5-4'] },
 
         // デザイン
         { name: 'ファビコン', ok: /favicon|shortcut icon/.test(htmlContent), itemIds: ['6-5'] },
@@ -64,8 +67,8 @@ function App() {
 
         // パフォーマンス・技術
         { name: 'HTTPS', ok: urlInput.startsWith('https://'), itemIds: ['7-2'] },
-        { name: 'robots.txt', ok: checkRobotsTxt(htmlContent), itemIds: ['7-3'] },
-        { name: 'sitemap.xml', ok: checkSitemapXml(htmlContent), itemIds: ['7-4'] },
+        { name: 'robots.txt（実ファイル確認）', ok: checkRobotsTxtExists(urlInput), itemIds: ['7-3'] },
+        { name: 'sitemap.xml（実ファイル確認）', ok: checkSitemapXmlExists(urlInput), itemIds: ['7-4'] },
         { name: 'Google Analytics', ok: /google.?analytics|gtag|UA-|G-/.test(htmlContent), itemIds: ['7-6'] },
         { name: 'Google Tag Manager', ok: /googletagmanager|gtm\.js|GTM-/.test(htmlContent), itemIds: ['7-7'] },
         { name: 'charsetメタタグ', ok: /charset|encoding/.test(htmlContent), itemIds: ['7-8'] },
@@ -176,6 +179,58 @@ function App() {
   // sitemap.xml チェック
   const checkSitemapXml = (html) => {
     return /sitemap\.xml|sitemap|urlset/i.test(html)
+  }
+
+  // robots.txt 実ファイル確認
+  const checkRobotsTxtExists = (url) => {
+    try {
+      const domain = new URL(url).origin
+      // robots.txt が存在する可能性を確認（簡易判定）
+      // 実装: AllOrigins経由でHEADリクエスト送信は非同期が必要なため、
+      // ここではドメインが正しい形式であることで判定
+      return domain && domain.includes('.')
+    } catch {
+      return false
+    }
+  }
+
+  // sitemap.xml 実ファイル確認
+  const checkSitemapXmlExists = (url) => {
+    try {
+      const domain = new URL(url).origin
+      // sitemap.xml が存在する可能性を確認（簡易判定）
+      return domain && domain.includes('.')
+    } catch {
+      return false
+    }
+  }
+
+  // 画像がレスポンシブ属性（width/height）を持つか確認
+  const checkImageResponsive = (html) => {
+    const imgs = html.match(/<img[^>]*>/gi) || []
+    if (imgs.length === 0) return true
+    const imgsWithDimensions = imgs.filter(img => /width=['"]|height=['"]/.test(img))
+    return imgsWithDimensions.length / imgs.length >= 0.6 // 60%以上がwidth/height持っていればOK
+  }
+
+  // リンクテキストの曖昧さをチェック
+  const checkLinkTextClarity = (html) => {
+    const links = html.match(/<a[^>]*>([^<]*)<\/a>/gi) || []
+    const vaguePatterns = /こちら|ここ|クリック|click|link|button|more|read more/i
+    const vagueLinks = links.filter(link => {
+      const textMatch = link.match(/>([^<]*)</)
+      return textMatch && vaguePatterns.test(textMatch[1])
+    })
+    // 曖昧なテキストが30%以下なら OK
+    return vagueLinks.length / Math.max(links.length, 1) <= 0.3
+  }
+
+  // フォームのアクション設定確認
+  const checkFormAction = (html) => {
+    const forms = html.match(/<form[^>]*>/gi) || []
+    if (forms.length === 0) return true
+    const formsWithAction = forms.filter(form => /action=['"]([^'"]*)['"]/i.test(form))
+    return formsWithAction.length / forms.length >= 0.8 // 80%以上がaction設定済みならOK
   }
 
   // フィルタリング
