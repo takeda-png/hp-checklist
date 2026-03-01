@@ -1,145 +1,119 @@
 import { useState, useEffect } from 'react'
 import { checklistData } from './data/checklist'
-import FilterBar from './components/FilterBar'
-import StatsBar from './components/StatsBar'
-import CategorySection from './components/CategorySection'
-import URLChecker from './components/URLChecker'
 
 function App() {
   const [checkedItems, setCheckedItems] = useState({})
-  const [memos, setMemos] = useState({})
   const [filterPriority, setFilterPriority] = useState('all')
-  const [expandedCategories, setExpandedCategories] = useState({})
-  const [showURLChecker, setShowURLChecker] = useState(false)
-  const [autoCheckedItems, setAutoCheckedItems] = useState(null)
+  const [expandedCategory, setExpandedCategory] = useState(null)
 
-  // localStorage から初期データを読み込む
   useEffect(() => {
-    const savedState = localStorage.getItem('hp-checklist-state')
-    const savedMemos = localStorage.getItem('hp-checklist-memos')
-
-    if (savedState) setCheckedItems(JSON.parse(savedState))
-    if (savedMemos) setMemos(JSON.parse(savedMemos))
-
-    // 最初はすべてのカテゴリを展開
-    const initialExpanded = {}
-    checklistData.forEach((cat) => {
-      initialExpanded[cat.id] = true
-    })
-    setExpandedCategories(initialExpanded)
+    const saved = localStorage.getItem('hp-checklist-state')
+    if (saved) setCheckedItems(JSON.parse(saved))
   }, [])
 
-  // checkedItems を localStorage に保存
   useEffect(() => {
     localStorage.setItem('hp-checklist-state', JSON.stringify(checkedItems))
   }, [checkedItems])
 
-  // memos を localStorage に保存
-  useEffect(() => {
-    localStorage.setItem('hp-checklist-memos', JSON.stringify(memos))
-  }, [memos])
-
   const handleCheck = (itemId) => {
-    setCheckedItems((prev) => ({
+    setCheckedItems(prev => ({
       ...prev,
-      [itemId]: !prev[itemId],
-    }))
-  }
-
-  const handleMemoChange = (categoryId, text) => {
-    setMemos((prev) => ({
-      ...prev,
-      [categoryId]: text,
+      [itemId]: !prev[itemId]
     }))
   }
 
   const handleReset = () => {
-    if (window.confirm('すべてのチェックをリセットしますか？')) {
+    if (window.confirm('すべてチェックを外しますか？')) {
       setCheckedItems({})
     }
   }
 
-  const toggleCategory = (categoryId) => {
-    setExpandedCategories((prev) => ({
-      ...prev,
-      [categoryId]: !prev[categoryId],
-    }))
-  }
+  // フィルタリング
+  const filteredItems = checklistData.reduce((acc, category) => {
+    const filtered = category.items.filter(
+      item => filterPriority === 'all' || item.priority === filterPriority
+    )
+    if (filtered.length > 0) {
+      acc.push({ ...category, items: filtered })
+    }
+    return acc
+  }, [])
 
-  // フィルタリング済みのカテゴリデータを作成
-  const filteredData = checklistData.map((cat) => ({
-    ...cat,
-    items: cat.items.filter(
-      (item) => filterPriority === 'all' || item.priority === filterPriority
-    ),
-  })).filter((cat) => cat.items.length > 0)
-
-  // 完了数を計算
-  const totalItems = checklistData.reduce((sum, cat) => sum + cat.items.length, 0)
-  const completedItems = Object.values(checkedItems).filter(Boolean).length
+  const total = checklistData.reduce((sum, cat) => sum + cat.items.length, 0)
+  const completed = Object.values(checkedItems).filter(Boolean).length
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* ヘッダー */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">HP公開チェックリスト</h1>
-              <p className="text-gray-600">
-                HP公開前に確認すべき45項目のチェックリストです。
-              </p>
-            </div>
-            <button
-              onClick={() => setShowURLChecker(!showURLChecker)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
+      <h1>HP公開チェックリスト</h1>
+      
+      <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#e3f2fd', borderRadius: '8px' }}>
+        <h3>完了状況: {completed} / {total} ({Math.round(completed/total*100)}%)</h3>
+        <div style={{ width: '100%', height: '20px', backgroundColor: '#ddd', borderRadius: '4px' }}>
+          <div style={{ width: `${Math.round(completed/total*100)}%`, height: '100%', backgroundColor: '#2196f3', borderRadius: '4px' }}></div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <button onClick={() => setFilterPriority('all')} style={{ padding: '8px 16px', backgroundColor: filterPriority === 'all' ? '#2196f3' : '#ddd', color: filterPriority === 'all' ? 'white' : 'black', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          すべて
+        </button>
+        <button onClick={() => setFilterPriority('高')} style={{ padding: '8px 16px', backgroundColor: filterPriority === '高' ? '#f44336' : '#ffcdd2', color: filterPriority === '高' ? 'white' : 'black', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          優先度：高
+        </button>
+        <button onClick={() => setFilterPriority('中')} style={{ padding: '8px 16px', backgroundColor: filterPriority === '中' ? '#ff9800' : '#ffe0b2', color: filterPriority === '中' ? 'white' : 'black', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          優先度：中
+        </button>
+        <button onClick={() => setFilterPriority('低')} style={{ padding: '8px 16px', backgroundColor: filterPriority === '低' ? '#4caf50' : '#c8e6c9', color: filterPriority === '低' ? 'white' : 'black', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          優先度：低
+        </button>
+        <button onClick={handleReset} style={{ padding: '8px 16px', backgroundColor: '#999', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          リセット
+        </button>
+      </div>
+
+      <div>
+        {filteredItems.map(category => (
+          <div key={category.id} style={{ marginBottom: '15px', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
+            <div 
+              onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+              style={{ padding: '15px', backgroundColor: '#f5f5f5', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
-              {showURLChecker ? 'チェックリストに戻る' : 'URLをチェック'}
-            </button>
-          </div>
-        </div>
-
-        {/* URLチェッカー */}
-        {showURLChecker && (
-          <URLChecker
-            onCheckedItems={setAutoCheckedItems}
-            checklistData={checklistData}
-          />
-        )}
-
-        {/* 統計情報バー */}
-        <StatsBar completed={completedItems} total={totalItems} />
-
-        {/* フィルタバー */}
-        <FilterBar
-          filterPriority={filterPriority}
-          onFilterChange={setFilterPriority}
-          onReset={handleReset}
-        />
-
-        {/* チェックリスト */}
-        <div className="space-y-4">
-          {filteredData.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <p className="text-gray-600 text-lg">
-                選択された優先度に該当する項目がありません
-              </p>
+              <div>
+                <h3 style={{ margin: '0 0 5px 0' }}>{category.category}</h3>
+                {category.subcategory && <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>{category.subcategory}</p>}
+              </div>
+              <span>{category.items.filter(i => checkedItems[i.id]).length} / {category.items.length}</span>
             </div>
-          ) : (
-            filteredData.map((category) => (
-              <CategorySection
-                key={category.id}
-                category={category}
-                isExpanded={expandedCategories[category.id]}
-                onToggle={() => toggleCategory(category.id)}
-                checkedItems={checkedItems}
-                onCheck={handleCheck}
-                memo={memos[category.id] || ''}
-                onMemoChange={(text) => handleMemoChange(category.id, text)}
-              />
-            ))
-          )}
-        </div>
+
+            {expandedCategory === category.id && (
+              <div style={{ padding: '15px' }}>
+                {category.items.map(item => (
+                  <label key={item.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={checkedItems[item.id] || false}
+                      onChange={() => handleCheck(item.id)}
+                      style={{ marginRight: '10px', width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                    <span style={{ flex: 1, textDecoration: checkedItems[item.id] ? 'line-through' : 'none', color: checkedItems[item.id] ? '#999' : 'black' }}>
+                      {item.title}
+                    </span>
+                    <span style={{ 
+                      marginLeft: '10px', 
+                      padding: '4px 8px', 
+                      borderRadius: '4px',
+                      color: 'white',
+                      fontSize: '12px',
+                      backgroundColor: item.priority === '高' ? '#f44336' : item.priority === '中' ? '#ff9800' : '#4caf50'
+                    }}>
+                      {item.priority}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   )
