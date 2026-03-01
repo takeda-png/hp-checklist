@@ -3,12 +3,15 @@ import { checklistData } from './data/checklist'
 import FilterBar from './components/FilterBar'
 import StatsBar from './components/StatsBar'
 import CategorySection from './components/CategorySection'
+import URLChecker from './components/URLChecker'
 
 function App() {
   const [checkedItems, setCheckedItems] = useState({})
   const [memos, setMemos] = useState({})
   const [filterPriority, setFilterPriority] = useState('all')
   const [expandedCategories, setExpandedCategories] = useState({})
+  const [showURLChecker, setShowURLChecker] = useState(false)
+  const [autoCheckedItems, setAutoCheckedItems] = useState(null)
 
   // localStorage から初期データを読み込む
   useEffect(() => {
@@ -80,11 +83,29 @@ function App() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* ヘッダー */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">HP公開チェックリスト</h1>
-          <p className="text-gray-600">
-            HP公開前に確認すべき45項目のチェックリストです。すべての項目をチェックして、完璧なHP公開を目指しましょう。
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">HP公開チェックリスト</h1>
+              <p className="text-gray-600">
+                HP公開前に確認すべき45項目のチェックリストです。
+              </p>
+            </div>
+            <button
+              onClick={() => setShowURLChecker(!showURLChecker)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              {showURLChecker ? 'チェックリストに戻る' : 'URLをチェック'}
+            </button>
+          </div>
         </div>
+
+        {/* URLチェッカー */}
+        {showURLChecker && (
+          <URLChecker
+            onCheckedItems={setAutoCheckedItems}
+            checklistData={checklistData}
+          />
+        )}
 
         {/* 統計情報バー */}
         <StatsBar completed={completedItems} total={totalItems} />
