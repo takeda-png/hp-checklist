@@ -79,9 +79,9 @@ function App() {
   const completed = Object.values(checkedItems).filter(Boolean).length
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto', backgroundColor: '#f0f0f0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>HP公開チェックリスト</h1>
+        <h1 style={{ color: '#333' }}>HP公開チェックリスト</h1>
         <button
           onClick={() => setShowURLChecker(!showURLChecker)}
           style={{ padding: '10px 20px', backgroundColor: '#2196f3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
