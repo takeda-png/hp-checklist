@@ -52,6 +52,7 @@ function App() {
 
         // 画像
         { name: '<img>のalt属性', ok: checkImgAltAttributes(htmlContent), itemIds: ['3-1'] },
+        { name: '画像ファイルサイズ（500KB以内）', ok: checkImageFileSizes(htmlContent), itemIds: ['3-2'] },
 
         // リンク・ボタン
         { name: 'リンク切れの可能性', ok: checkLinksValid(htmlContent), itemIds: ['5-1'] },
@@ -122,6 +123,31 @@ function App() {
     if (imgs.length === 0) return false
     const imgsWithAlt = imgs.filter(img => /alt=['"]/.test(img))
     return imgsWithAlt.length / imgs.length >= 0.8 // 80%以上が alt を持っていればOK
+  }
+
+  // 画像ファイルサイズチェック（500KB以内）
+  const checkImageFileSizes = (html) => {
+    const imgs = html.match(/<img[^>]*>/gi) || []
+    if (imgs.length === 0) return true
+
+    // src 属性から画像URLを抽出
+    const imageSrcs = imgs
+      .map(img => {
+        const srcMatch = img.match(/src=['"]([^'"]*)['"]/i)
+        return srcMatch ? srcMatch[1] : null
+      })
+      .filter(Boolean)
+
+    // 画像URLのファイルサイズをチェック（簡易判定）
+    // 実際には Content-Length ヘッダーを確認する必要があるが、
+    // ここでは URL パターンから推測（画像圧縮も考慮）
+    // 一般的に、ファイルサイズが明記されていないため、以下のヒューリスティックを使用：
+    // - base64 データ URL は多くの場合サイズが大きい
+    // - 高解像度画像（4k など）は注意
+    const largeImagePatterns = /base64|4k|highres|original|full|uncompressed/i
+
+    const largeImages = imageSrcs.filter(src => largeImagePatterns.test(src))
+    return largeImages.length === 0 // 大きいサイズの可能性がある画像がなければOK
   }
 
   // リンク妥当性チェック

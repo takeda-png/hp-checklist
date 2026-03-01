@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URLチェッカー</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+    .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h1 { color: #333; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input { width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+    button { padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #45a049; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .results { margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 8px; display: none; }
+    .results.show { display: block; }
+    .check-item { padding: 10px; border-bottom: 1px solid #ddd; }
+    .check-item.ok { color: #4caf50; }
+    .check-item.ng { color: #f44336; }
+    .icon { font-weight: bold; margin-right: 8px; }
+    .error { color: #f44336; padding: 10px; background: #ffebee; border-radius: 4px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>URLチェッカー</h1>
+    <p>HPのURLを入力して、自動チェックを実行します</p>
+    
+    <div class="form-group">
+      <label>URLを入力:</label>
+      <input type="url" id="urlInput" placeholder="https://example.com">
+    </div>
+
+    <button id="checkBtn" onclick="checkURL()">チェック開始</button>
+
+    <div id="results" class="results">
+      <h2>チェック結果</h2>
+      <p><strong>URL:</strong> <span id="resultUrl"></span></p>
+      <div id="checksList"></div>
+      <p style="margin-top: 15px; color: #666; font-size: 14px;">
+        ✓ = 確認できた &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✗ = 見つかりません
+      </p>
+    </div>
+    <div id="error" class="error" style="display: none;"></div>
+  </div>
+
+  <script>
+    async function checkURL() {
+      const url = document.getElementById('urlInput').value.trim();
+      const errorDiv = document.getElementById('error');
+      errorDiv.style.display = 'none';
+
+      if (!url) {
+        errorDiv.textContent = 'URLを入力してください';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      const btn = document.getElementById('checkBtn');
+      btn.disabled = true;
+      btn.innerText = 'チェック中...';
+
+      try {
+        // ローカルプロキシを使用
+        const response = await fetch(`/api/fetch/${encodeURIComponent(url)}`);
+        const data = await response.json();
+        const html = data.contents;
+
+        const checks = [
+          { name: '<title>タグ', ok: /<title>([^<]+)<\/title>/i.test(html) },
+          { name: '<meta description>', ok: /name=["']description["']\s+content=/i.test(html) },
+          { name: 'OGPタグ（og:title）', ok: /property=["']og:title["']/i.test(html) },
+          { name: '<h1>タグ', ok: /<h1[^>]*>/i.test(html) },
+          { name: 'HTTPS', ok: url.startsWith('https://') },
+          { name: 'ファビコン', ok: /favicon|shortcut icon|apple-touch-icon/i.test(html) }
+        ];
+
+        document.getElementById('resultUrl').innerText = url;
+        const checksList = document.getElementById('checksList');
+        checksList.innerHTML = checks.map(c => 
+          `<div class="check-item ${c.ok ? 'ok' : 'ng'}"><span class="icon">${c.ok ? '✓' : '✗'}</span>${c.name}</div>`
+        ).join('');
+
+        document.getElementById('results').classList.add('show');
+      } catch (error) {
+        errorDiv.textContent = 'エラー: ' + error.message;
+        errorDiv.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'チェック開始';
+      }
+    }
+
+    document.getElementById('urlInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkURL();
+    });
+  </script>
+</body>
+</html>
